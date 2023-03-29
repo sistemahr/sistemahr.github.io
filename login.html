@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
+    <title>Ingreso</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="images/icon-152.png">
+    <meta name="theme-color" content="white" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Sistema Visitas">
+    <meta name="msapplication-TileImage" content="images/icon-144.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+
+    <!-- You MUST include jQuery before Fomantic -->
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/semantic.min.js"></script>
+    <script src="js/globals.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/semantic.min.css">
+
+    <style type="text/css">
+        body {
+            background-color: #bbbbbb;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        body>.grid {
+            height: 100%;
+        }
+
+        .column {
+            max-width: 450px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ui middle aligned center aligned grid">
+        <div class="column">
+            <div id="loadingDimmer" class="ui inverted dimmer">
+                <div class="ui text loader">Ingresando</div>
+            </div>
+            <h2 class="ui header">
+                <div class="content">
+                    Bienvenido
+                </div>
+            </h2>
+            <form class="ui large form">
+                <div class="ui basic stacked segment">
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="user icon"></i>
+                            <input id="email_input" type="email" name="email" placeholder="Email" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui left icon input">
+                            <i class="lock icon"></i>
+                            <input id="password_input" type="password" name="password" placeholder="Contrase&ntilde;a">
+                        </div>
+                    </div>
+                    <button id="loginButton" class="ui fluid large primary submit button">Ingresar</button>
+                </div>
+                <div id="message" class="ui negative message" style="display: none;">
+                    <p id="responseMessage"> </p>
+                </div>
+            </form>
+            <div id="recover_password" class="ui message">
+                ¿Olvido su contrase&ntilde;a? <a href="#">Recuperar</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="recover_password_dlg" class="ui tiny modal">
+        <i class="close icon"></i>
+        <div id="cabecera_visita_dlg" class="header">
+            Recuperar contrase&ntilde;a
+        </div>
+        <div class="content">
+            <div id="recover_form" class="ui grid form">
+                <div class="eight wide field">
+                    <label for="">Email</label>
+                    <input name="email" type="email">
+                </div>
+                <div class="eight wide field">
+                    <label for="">Dni</label>
+                    <input name="dni" type="text">
+                </div>
+                <div class="ui error message"></div>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="ui black deny button">
+                Cancelar
+            </div>
+            <div id="guardar_btn" class="ui positive button">
+                Recuperar
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = baseUrl + "/api/login.php";
+        document.addEventListener('DOMContentLoaded', function () {
+
+            $("#recover_password").click(function (e) {
+                e.preventDefault();
+                $("#recover_password_dlg").modal('show');
+            })
+
+            $("#recover_password_dlg").modal({
+                onShow: function () {
+                    let formVisita = $('#recover_form');
+
+                    formVisita.form({
+                        on: 'blur',
+                        fields: {
+                            email: {
+                                identifier: 'email',
+                                rules: [
+                                    {
+                                        type: 'email',
+                                        prompt: 'Por favor ingrese un e-mail valido'
+                                    }
+                                ]
+                            },
+                            dni: {
+                                identifier: 'dni',
+                                rules: [
+                                    {
+                                        type: 'empty',
+                                        prompt: 'Por favor ingrese un dni'
+                                    }
+                                ]
+                            }
+                        }
+                    });
+
+                    formVisita.form("clear");
+                },
+                onApprove: function (element) {
+                    let formVisita = $('#recover_form');
+
+                    if (!formVisita.form("validate form")) {
+                        return false;
+                    }
+
+                    // get all values
+                    let allFields = formVisita.form('get values');
+                    console.log(allFields);
+
+                    let myHeaders = new Headers();
+                    myHeaders.append("Content-Type", "application/json");
+
+                    let raw = JSON.stringify(allFields);
+
+                    let requestOptions = {
+                        method: 'POST',
+                        headers: myHeaders,
+                        body: raw,
+                        redirect: 'follow'
+                    };
+
+                    let recover_url = `${baseUrl}/api/recover.php`;
+                    $("#message").hide();
+                    fetch(recover_url, requestOptions)
+                        .then(function (res) {
+                            $('#recover_password_dlg').modal("hide");
+                            return res.json(); //error here
+                        }).then(function (data) {
+                            if (data.message != undefined) {
+                                $("#message").show();
+                                $("#responseMessage").html(data.message);
+                                return false;
+                            }
+
+                            return true;
+                        }).catch((error) => {
+                            console.log(error);
+                            return false;
+                        });
+                    return false;
+                }
+            });
+
+
+            document.getElementById("loginButton").addEventListener("click", (e) => {
+                e.preventDefault();
+                let email = document.getElementById("email_input").value;
+                let password = document.getElementById("password_input").value;
+
+
+                if (email == "") {
+                    document.querySelector(".ui.message").style.display = "block";
+                    document.getElementById("responseMessage").innerHTML = "Ingrese un nombre de usuario valido.";
+                    return;
+                } else {
+                    document.querySelector(".ui.message").style.display = "none";
+                }
+
+                if (password == "") {
+                    document.querySelector(".ui.message").style.display = "block";
+                    document.getElementById("responseMessage").innerHTML = "Ingrese una contrase&ntilde;a v&aacute;lida.";
+                    return;
+                } else {
+                    document.querySelector(".ui.message").style.display = "none";
+                }
+
+                document.getElementById("loadingDimmer").classList.add("active");
+                login(email, password);
+            });
+        });
+
+        function login(email, password) {
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            };
+
+            return fetch(apiUrl, requestOptions)
+                .then(response => {
+                    //document.getElementById("loadingDimmer").classList.remove("active");
+                    return response.json();
+                })
+                .then(user => {
+                    //Si vino error mostramos
+                    if (user.message != undefined) {
+                        document.querySelector(".ui.message").style.display = "block";
+                        document.getElementById("responseMessage").innerHTML = user.message;
+                        document.getElementById("loadingDimmer").classList.remove("active");
+                    } else {
+                        document.querySelector(".ui.message").style.display = "none";
+                    }
+
+                    // login successful if there's a jwt token in the response
+                    if (user.jwt != undefined) {
+                        // store user details and jwt token in local storage to keep user logged in between page refreshes
+                        localStorage.setItem('user', JSON.stringify(user));
+                        window.location.href = "pacientes.html";
+                    }
+
+                    return user;
+                });
+        }
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Principal</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="images/icon-152.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="white" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Sistema Visitas">
+    <meta name="msapplication-TileImage" content="images/icon-144.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+
+    <!-- You MUST include jQuery before Fomantic -->
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/semantic.min.js"></script>
+    <script src="lib/moment-with-locales.min.js"></script>
+    <script src="js/globals.js"></script>
+    <script src="js/utils.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="lib/semantic.min.css">
+
+    <style type="text/css">
+        body {
+            background-color: #e4e4e4;
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        .column {
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ui borderless menu">
+        <div class="menu">
+            <a onclick="window.history.back();" class="item">
+                <i class="icon large chevron left"></i>
+            </a>
+        </div>
+        <div class="right menu">
+            <a href="profile.html" class="ui item">
+                <i class="icon large cog"></i>
+            </a>
+            <a id="logoutBtn" href="#" class="ui item">
+                <i class="large sign out alternate icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="ui middle aligned left aligned grid">
+        <div class="column">
+            <div id="loadingDimmer" class="ui inverted dimmer">
+                <div class="ui text loader">Cargando visitas</div>
+            </div>
+
+            <div class="ui  borderless secondary menu">
+                <div class="header item">
+                    <h3 class="ui header">
+                        <div class="content" id="header_text">
+
+                        </div>
+                    </h3>
+                </div>
+                <div class="right menu">
+                    <div class="item">
+                        <div id="nueva_visita" class="ui primary icon button">
+                            <i class="icon add"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ui divider"></div>
+            <div class="ui segment">
+                <div id="visitaslist" class="ui relaxed divided list">
+                </div>
+            </div>
+            <div id="presentadoBlock" class="ui icon message" style="display: none;">
+                <i class="lock icon"></i>
+                <div class="content">
+                    <div class="header">
+                        Este mes esta cerrado
+                    </div>
+                    <p>Este mes esta bloqueado para editar visitas.</p>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <div id="visita_modal_dlg" class="ui tiny modal">
+        <i class="close icon"></i>
+        <div id="cabecera_visita_dlg" class="header">
+            Nueva / Editar Visita
+        </div>
+        <div class="content">
+            <div id="savingDimmer" class="ui inverted dimmer">
+                <div class="ui text loader">Guardando</div>
+            </div>
+            <form id="visita_form">
+                <div id="detalles">
+                    <div class="ui two column grid form">
+                        <div class="column two field">
+                            <label for="">Desde</label>
+                            <div class="ui" id="time_calendar_desde">
+                                <div class="ui input left icon">
+                                    <i class="time icon"></i>
+                                    <input id="visita_desde" type="time" name="desde" placeholder="Desde">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column two  field">
+                            <label for="">Hasta</label>
+                            <div class="ui" id="time_calendar_hasta">
+                                <div class="ui input left icon">
+                                    <i class="time icon"></i>
+                                    <input id="visita_hasta" type="time" name="hasta" placeholder="Hasta">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui centered grid">
+                        <div class="ui statistic">
+                            <div class="label">
+                                Horas
+                            </div>
+                            <div id="valdiff" class="value">-</div>
+                        </div>
+                        <div class="row"></div>
+                    </div>
+                </div>
+
+                <div class="ui accordion field">
+                    <div class="title ">
+                        <i class="icon dropdown"></i>
+                        Detalles extra
+                    </div>
+                    <div class="content field ">
+                        <div id="internacion" class="ui toggle checkbox">
+                            <input id="intern" type="checkbox" name="intern" tabindex="0" class="hidden">
+                            <label>Acompa&ntilde;amiento en internaci&oacute;n.</label>
+                        </div>
+                        <br>
+                        <br>
+                        <div id="supervision" class="ui toggle checkbox">
+                            <input type="checkbox" name="supervision" tabindex="0" class="hidden">
+                            <label>Tarea de supervision.</label>
+                        </div>
+                        <br>
+                        <div id="coordinacion" class="ui toggle checkbox">
+                            <input type="checkbox" name="coordinacion" tabindex="0" class="hidden">
+                            <label>Tarea de coordinacion.</label>
+                        </div>
+                        <br>
+                        <div id="coorsup" class="ui toggle checkbox">
+                            <input type="checkbox" name="coorsup" tabindex="0" class="hidden">
+                            <label>Tarea de coordinacion + supervision.</label>
+                        </div>
+                        <br>
+                        <div id="docencia1" class="ui toggle checkbox" style="display: none;">
+                            <input type="checkbox" name="docencia1" tabindex="0" class="hidden">
+                            <label>Tarea de docencia - Nivelacion.</label>
+                        </div>
+                        <br>
+                        <div id="docencia2" class="ui toggle checkbox" style="display: none;">
+                            <input type="checkbox" name="docencia2" tabindex="0" class="hidden">
+                            <label>Tarea de docencia - General.</label>
+                        </div>
+                        <br>
+                        <div id="docencia3" class="ui toggle checkbox" style="display: none;">
+                            <input type="checkbox" name="docencia3" tabindex="0" class="hidden">
+                            <label>Otros.</label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div id="aviso" class="ui warning message" style="display: none;">
+                <i class="close icon"></i>
+                <div class="header">
+                    ¡Advertencia!
+                </div>
+                <p id="avisoMensaje">
+
+                </p>
+            </div>
+
+            <div id="message" class="ui negative message" style="display: none;">
+                <p id="responseMessage"> </p>
+            </div>
+
+        </div>
+        <div class="actions">
+            <div class="ui black deny button">
+                Cancelar
+            </div>
+            <div id="guardar_btn" class="ui positive button">
+                Guardar
+            </div>
+        </div>
+    </div>
+
+    <div id="del_visita_modal_dlg" class="ui tiny modal">
+        <i class="close icon"></i>
+        <div class="header">
+            Borrar Visita
+        </div>
+        <div class="content">
+
+            <p>¿Desea borrar la visita seleccionada?</p>
+
+        </div>
+        <div class="actions">
+            <div class="ui black deny button">
+                Cancelar
+            </div>
+            <div id="del_guardar_btn" class="ui positive button">
+                Borrar
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = baseUrl + "/api";
+        let visitas = [];
+
+        let hoy = null;
+
+        let date = null;
+        let pac = null;
+        let desde = null;
+        let hasta = null;
+
+        let id_visita = null;
+
+        let permisos = null;
+        let type = 1;
+
+        // Get a value from the querystring
+        function findGetParameter(parameterName) {
+            var result = null,
+                tmp = [];
+            var items = location.search.substr(1).split("&");
+            for (var index = 0; index < items.length; index++) {
+                tmp = items[index].split("=");
+                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+            }
+            return result;
+        }
+
+        $(document).ready(function () {
+            if (localStorage.getItem("user") === null) {
+                window.location.href = "login.html";
+            }
+
+            //Guardamos en la fecha hoy la fecha que viene por parametro
+            date = findGetParameter('date');
+            hoy = moment(date, "YYYYMMDD")._d;//new Date(parseInt(date.substr(0,4)), parseInt(date.substr(4,2)) - 1, parseInt(date.substr(6,2)));
+
+            cargarVisitas();
+
+            $('.ui.dropdown').dropdown();
+
+            $("#nueva_visita").click(function () {
+                id_visita = null;
+
+                $('#visita_modal_dlg').modal({
+                    onShow: function () {
+                        $('.ui.accordion').accordion();
+                        $('.ui.checkbox').checkbox();
+
+                        $("#visita_desde").val("");
+                        $("#visita_hasta").val("");
+                        $("#cabecera_visita_dlg").html("Nueva Visita");
+                        $("#guardar_btn").addClass("disabled");
+                        $("#message").hide();
+                        $("#aviso").hide();
+                        $("#responseMessage").html("");
+                        $("#valdiff").html("");
+
+                        //Por defecto muestro todo
+                        $("#detalles").show();
+                        $("#internacion").show();
+
+                        $("#supervision").checkbox("uncheck");
+                        $("#coordinacion").checkbox("uncheck");
+                        $("#coorsup").checkbox("uncheck");
+                        $("#docencia1").checkbox("uncheck");
+                        $("#docencia2").checkbox("uncheck");
+                        $("#docencia3").checkbox("uncheck");
+
+                        type = 1;
+
+                        $("#supervision").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#coordinacion").checkbox("uncheck");
+                                $("#coorsup").checkbox("uncheck");
+                                $("#docencia1").checkbox("uncheck");
+                                $("#docencia2").checkbox("uncheck");
+                                $("#docencia3").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 2;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        $("#coordinacion").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#supervision").checkbox("uncheck");
+                                $("#coorsup").checkbox("uncheck");
+                                $("#docencia1").checkbox("uncheck");
+                                $("#docencia2").checkbox("uncheck");
+                                $("#docencia3").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 3;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        $("#coorsup").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#supervision").checkbox("uncheck");
+                                $("#coordinacion").checkbox("uncheck");
+                                $("#docencia1").checkbox("uncheck");
+                                $("#docencia2").checkbox("uncheck");
+                                $("#docencia3").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 4;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        $("#docencia1").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#supervision").checkbox("uncheck");
+                                $("#coordinacion").checkbox("uncheck");
+                                $("#coorsup").checkbox("uncheck");
+                                $("#docencia2").checkbox("uncheck");
+                                $("#docencia3").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 5;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        $("#docencia2").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#supervision").checkbox("uncheck");
+                                $("#coordinacion").checkbox("uncheck");
+                                $("#coorsup").checkbox("uncheck");
+                                $("#docencia1").checkbox("uncheck");
+                                $("#docencia3").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 6;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        $("#docencia3").checkbox({
+                            onChecked: function () {
+                                //dechequeamos los demas
+                                $("#supervision").checkbox("uncheck");
+                                $("#coordinacion").checkbox("uncheck");
+                                $("#coorsup").checkbox("uncheck");
+                                $("#docencia1").checkbox("uncheck");
+                                $("#docencia2").checkbox("uncheck");
+                                $("#guardar_btn").removeClass("disabled");
+                                $("#detalles").hide(500);
+                                $("#internacion").hide(500);
+                                type = 7;
+                            },
+                            onUnchecked: function () {
+                                $("#detalles").show(500);
+                                $("#internacion").show(500);
+                                $("#guardar_btn").addClass("disabled");
+                                type = 1;
+                            }
+                        });
+
+                        //Mostrar opcion de supervision
+                        if (permisos[0] == "1") {
+                            $("#supervision").show();
+                        } else {
+                            $("#supervision").hide();
+                        }
+
+                        //Mostrar opcion de coordinacion
+                        if (permisos[1] == "1") {
+                            $("#coordinacion").show();
+                        } else {
+                            $("#coordinacion").hide();
+                        }
+
+                        //Mostrar opcion de coordinacion + supervision
+                        if (permisos[0] == "1" &&
+                            permisos[1] == "1") {
+                            $("#coorsup").show();
+                        } else {
+                            $("#coorsup").hide();
+                        }
+
+                        //Mostrar opcion de docencia
+                        if (permisos[2] == "1") {
+                            $("#docencia1").show();
+                            $("#docencia2").show();
+                            $("#docencia3").show();
+                        } else {
+                            $("#docencia1").hide();
+                            $("#docencia2").hide();
+                            $("#docencia3").hide();
+                        }
+                    },
+                    onApprove: function (element) {
+                        let user = JSON.parse(localStorage.getItem('user'));
+
+                        let formVisita = $('#visita_form');
+
+                        // get all values
+                        let allFields = formVisita.form('get values');
+
+                        //Solo chequeo si es una visita normal.
+                        if (type == 1) {
+                            if (!validaRangoHorario()) {
+                                return;
+                            }
+                        }
+                        else {
+                            //Si es una tarea especial solo ponemos el valor desde
+                            desde = moment(hoy).format("YYYY-MM-DD HH:mm");
+                            hasta = moment(hoy).format("YYYY-MM-DD HH:mm");
+                        }
+
+                        let raw = JSON.stringify({ "id_at": user.id, "id_pac": pac, type: type, "desde": desde, "hasta": hasta, "intern": allFields["intern"] });
+
+                        let requestOptions = {
+                            method: 'POST',
+                            headers: getMyHeader(),
+                            body: raw,
+                            redirect: 'follow'
+                        };
+
+                        let url = `${apiUrl}/visitas.php`;
+
+                        $("#message").hide();
+                        $("#savingDimmer").addClass("active");
+                        fetch(url, requestOptions)
+                            .then(function (res) {
+                                //Si todo salio bien cerramos el dialogo y refrescamos la lista
+                                cargarVisitas();
+                                $('#visita_modal_dlg').modal("hide");
+                                return res.json(); //error here
+                            }).then(function (data) {
+                                $("#savingDimmer").removeClass("active");
+                                if (data.message != undefined) {
+                                    $("#message").show();
+                                    $("#responseMessage").html(data.message);
+                                    return false;
+                                }
+                                return true;
+                            }).catch((error) => {
+                                console.log(error);
+                                return false;
+                            });
+                        return false;
+                    }
+                }).modal('show');
+            });
+
+            $("#visita_desde").change(function () {
+                obtieneDiferencia();
+            });
+
+            $("#visita_hasta").change(function () {
+                obtieneDiferencia();
+            });
+
+            $("#visita_desde").blur(function () {
+                validaRangoHorario();
+            });
+
+            $("#visita_hasta").blur(function () {
+                if (!validaRangoHorario()) {
+                    return;
+                }
+
+                if (desde === undefined && hasta === undefined) {
+                    return;
+                }
+
+                chequearSolapamiento();
+
+            });
+
+            $("#logoutBtn").click(function () {
+                localStorage.removeItem("user");
+                window.location.href = "login.html";
+            });
+
+            /*
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker
+                    .register('./sw.js');
+            }
+            */
+        });
+
+        function obtieneDiferencia() {
+            $("#guardar_btn").addClass("disabled");
+            //get values
+            //hoy = new Date();
+            let valdesde = $("#visita_desde").val();
+            let valhasta = $("#visita_hasta").val();
+
+            //create date format
+            if (valdesde == "" || valhasta == "") {
+                return;
+            }
+            let horadesde = parseInt(valdesde.split(":")[0]);
+            let minudesde = parseInt(valdesde.split(":")[1]);
+
+            let horahasta = parseInt(valhasta.split(":")[0]);
+            let minuhasta = parseInt(valhasta.split(":")[1]);
+
+            let esMediaNoche = (horahasta == 0 && minuhasta == 0);
+
+            let timeStart = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), horadesde, minudesde, 0);
+            let timeEnd = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), horahasta, minuhasta, 0);
+
+            if(horahasta == 0 && minuhasta == 0) {
+                timeEnd.setDate(timeEnd.getDate() + 1);
+                //Le restamos un segundo
+                timeEnd.setSeconds(timeEnd.getSeconds() - 1);
+            } 
+
+            timeStart = roundTimeQuarterHour(timeStart);
+            timeEnd = roundTimeQuarterHour(timeEnd);
+
+            desde = moment(timeStart).format("YYYY-MM-DD HH:mm");
+            hasta = moment(timeEnd).format("YYYY-MM-DD HH:mm");
+
+            if (moment(timeEnd).isBefore(timeStart, 'time')) {
+                $("#aviso").show();
+                $("#avisoMensaje").html("El horario hasta no puede ser menor a desde.");
+                $("#guardar_btn").addClass("disabled");
+            } else {
+                chequearSolapamiento();
+            }
+
+
+            let diffStr = moment.utc(moment(timeEnd).diff(moment(timeStart))).format("H:m");
+
+            $("#valdiff").html(diffStr);
+        }
+
+        function redondeaHorario(horario) {
+            let hora = parseInt(horario.split(":")[0]);
+            let minuto = parseInt(horario.split(":")[1]);
+
+            let time = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), hora, minuto, 0);
+
+            time = roundTimeQuarterHour(time);
+
+            let formateado = moment(time).format("HH:mm");
+
+            return formateado;
+        }
+
+        function validaRangoHorario() {
+            $("#aviso").hide();
+
+            $("#guardar_btn").addClass("disabled");
+
+            let valdesde = $("#visita_desde").val();
+            let valhasta = $("#visita_hasta").val();
+
+            if (valdesde != "") {
+                valdesde = redondeaHorario(valdesde);
+                $("#visita_desde").val(valdesde);
+            }
+
+            if (valhasta != "") {
+                valhasta = redondeaHorario(valhasta);
+                $("#visita_hasta").val(valhasta);
+            }
+
+            if ((valdesde == "" || valhasta == "")) {
+                return false;
+            }
+
+            if ((valdesde != "" && valhasta != "") &&
+                (valdesde == valhasta)) {
+                $("#aviso").show();
+                $("#avisoMensaje").html("El horario desde y hasta no pueden ser iguales.");
+                $("#guardar_btn").addClass("disabled");
+            }
+
+            let horadesde = parseInt(valdesde.split(":")[0]);
+            let minudesde = parseInt(valdesde.split(":")[1]);
+
+            let horahasta = parseInt(valhasta.split(":")[0]);
+            let minuhasta = parseInt(valhasta.split(":")[1]);
+
+            let esMediaNoche = (horahasta == 0 && minuhasta == 0);
+
+            let timeStart = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), horadesde, minudesde, 0);
+            let timeEnd = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), horahasta, minuhasta, 0);
+
+            //Si la hora hasta es medianoche, lo ponemos como el siguiente dia
+            if(horahasta == 0 && minuhasta == 0) {
+                timeEnd.setDate(timeEnd.getDate() + 1);
+                //Le restamos un segundo
+                timeEnd.setSeconds(timeEnd.getSeconds() - 1);
+            } 
+
+            if (moment(timeEnd).isBefore(timeStart, 'time')) {
+                $("#aviso").show();
+                $("#avisoMensaje").html("El horario hasta no puede ser menor a desde.");
+                $("#guardar_btn").addClass("disabled");
+                return false;
+            } else {
+                $("#guardar_btn").removeClass("disabled");
+            }
+            return true;
+        }
+
+        function cargarVisitas() {
+            let user = JSON.parse(localStorage.getItem('user'));
+
+            //Mostramos u ocultamos las tareas de coordinacion, supervision y docencia
+            permisos = user["permisos"].split(',');
+
+            let jwtString = `Bearer ${user.jwt}`;
+
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("MyAuthorization", jwtString);
+
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+
+            date = findGetParameter('date');
+            pac = findGetParameter('pac');
+
+            //Actualizamos el titulo
+            date = findGetParameter('date');
+
+            let fechaSeleccionada = moment(date, "YYYYMMDD")._d;
+
+            $("#header_text").html("Visitas del " + moment(fechaSeleccionada).locale("es").format("D MMM"));
+
+            let url = `${apiUrl}/visitas.php?date=${date}&pac=${pac}`;
+
+            visitas = [];
+            $("#loadingDimmer").addClass("active");
+            fetch(url, requestOptions)
+                .then(function (res) {
+                    return res.json(); //error here
+                }).then(function (data) {
+                    if (data.message != undefined) {
+                        localStorage.removeItem("user");
+                        window.location.href = "login.html";
+                    }
+                    let visitaslist = document.getElementById("visitaslist");
+                    let hayPresentados = false;
+
+
+                    visitaslist.innerHTML = "";
+
+                    if (data["presentado"] !== undefined) {
+                        hayPresentados = data["presentado"];
+                    }
+
+                    if (data["length"] === undefined) {
+                        visitaslist.innerHTML = '<p>No hay visitas cargadas.</p>';
+                    } else {
+                        for (i in data) {
+                            let element = data[i];
+                            visitas.push(element);
+
+                            let superpos = parseInt(element.cantidad_solapados) > 0 ? '<a class="ui orange circular label">Visita con superposicion horaria</a>' : '';
+                            let intern = parseInt(element.internacion) > 0 ? '<a class="ui blue circular label">Visita con internacion</a>' : '';
+
+                            let presentadoClass = element.presentado == "1" ? "disabled" : "";
+
+                            hayPresentados = element.presentado == "1";
+
+                            let content = '';
+
+                            switch (element.type) {
+                                case '1':
+                                    content = `<div class="content">
+                                                  <div class="header">${element.desde}hs. ${element.hasta}hs.</div>
+                                                  <div class="description">${element.iniciales}, Duracion: <b>(${element.rango}hs.)</b></div>
+                                              </div>`;
+                                    break;
+                                case '2':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de supervision</div>
+                                              </div>`;
+                                    break;
+                                case '3':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de coordinacion</div>
+                                              </div>`;
+                                    break;
+                                case '4':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de coordinacion/supervision</div>
+                                              </div>`;
+                                    break;
+                                case '5':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de docencia - nivelacion</div>
+                                              </div>`;
+                                    break;
+                                case '6':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de docencia - general</div>
+                                              </div>`;
+                                    break;
+                                case '7':
+                                    content = `<div class="content">
+                                                  <div class="header">Tarea de docencia - otros</div>
+                                              </div>`;
+                                    break;
+                            }
+
+                            let elementTxt = `<div class="item">
+                                              <div class="right floated content">
+                                                  <button data-id="${element.id}" class="ui positive ${presentadoClass} icon button editar_visita">
+                                                      <i data-id="${element.id}" class="icon edit"></i>
+                                                  </button>
+                                                  <button data-id="${element.id}" class="ui negative ${presentadoClass} icon button borrar_visita">
+                                                      <i data-id="${element.id}" class="icon delete"></i>
+                                                  </button>
+                                              </div>
+                                              <i class="large user alternate middle aligned icon"></i>
+                                              ${content}
+                                              ${superpos}
+                                              ${intern}
+                                          </div>`;
+
+                            visitaslist.innerHTML += elementTxt;
+                        }
+                    }
+
+                    $("#loadingDimmer").removeClass("active");
+
+                    //Si hay presentados deshabilito el boton de agregar y muestro la placa de bloqueado
+                    if (hayPresentados) {
+                        $("#presentadoBlock").show();
+                        $("#nueva_visita").addClass("disabled");
+                    } else {
+                        $("#presentadoBlock").hide();
+                        $("#nueva_visita").removeClass("disabled");
+                    }
+
+                    $(".borrar_visita").click(function (e) {
+                        delVisita(e.target.dataset.id);
+                    });
+
+                    $(".editar_visita").click(function (e) {
+                        //e.target.dataset.id
+                        id_visita = e.target.dataset.id;
+                        editVisita(e.target.dataset.id);
+                    });
+
+                    return;
+                }).catch((error) => {
+                    console.log(error);
+                });
+        }
+
+        function chequearSolapamiento() {
+            //Chequeamos si no hay alguna visita que se solape con la que queremos agregar
+            //hoy = new Date();
+            let user = JSON.parse(localStorage.getItem('user'));
+
+            let jwtString = `Bearer ${user.jwt}`;
+
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            myHeaders.append("MyAuthorization", jwtString);
+
+            var requestOptions = {
+                method: 'GET',
+                headers: myHeaders,
+                redirect: 'follow'
+            };
+
+            let desdeq = desde.replace(/\:/g, '').replace(/\-/g, '').replace(/\s/g, '');
+            let hastaq = hasta.replace(/\:/g, '').replace(/\-/g, '').replace(/\s/g, '');
+
+            let url = `${apiUrl}/visitas.php?desde=${desdeq}&hasta=${hastaq}&id_pac=${pac}`;
+
+            if (id_visita != null) {
+                url += `&id=${id_visita}`;
+            }
+
+            fetch(url, requestOptions)
+                .then(function (res) {
+                    return res.json(); //error here
+                }).then(function (data) {
+                    if (data.length > 0) {
+                        $("#guardar_btn").addClass("disabled");
+                        $("#aviso").show();
+                        let rdesde = data[0].desde.substr(11, 5);
+                        let rhasta = data[0].hasta.substr(11, 5);
+                        let atnombre = data[0].nombre_completo;
+                        let mensaje = `El horario de ${rdesde} a ${rhasta} ya fue tomado por el AT<br>${atnombre}<br>
+                                           Ponerse en contacto con el colega para revisar el horario.<br>
+                                           Para presentar los horarios del mes es necesario
+                                           pedir permiso al administrador para permitir
+                                           superposición horaria con otro colega.`;
+                        $("#avisoMensaje").html(mensaje);
+                    } else {
+                        $("#guardar_btn").removeClass("disabled");
+                    }
+                    return;
+                }).catch((error) => {
+                    console.log(error);
+                });
+
+        }
+
+        function delVisita(id) {
+
+            $("#del_visita_modal_dlg").modal({
+                onApprove: function (element) {
+                    let user = JSON.parse(localStorage.getItem('user'));
+
+                    let requestOptions = {
+                        method: 'DELETE',
+                        headers: getMyHeader(),
+                        redirect: 'follow'
+                    };
+
+                    let url = `${apiUrl}/visitas.php?id=${id}`;
+
+                    $("#message").hide();
+                    console.log(url);
+
+                    $("#savingDimmer").addClass("active");
+                    fetch(url, requestOptions)
+                        .then(function (res) {
+                            cargarVisitas();
+                            $('#del_visita_modal_dlg').modal("hide");
+                            return true;
+                            return res.json(); //error here
+                        }).then(function (data) {
+                            $("#savingDimmer").removeClass("active");
+                            if (data.message != undefined) {
+                                $("#message").show();
+                                $("#responseMessage").html(data.message);
+                                return false;
+                            }
+                            return true;
+                            //Si todo salio bien cerramos el dialogo y refrescamos la lista
+                        }).catch((error) => {
+                            console.log(error);
+                            return false;
+                        });
+                    return true;
+                }
+            }).modal('show');
+
+        }
+
+        function editVisita(id) {
+
+            let visit = getVisita(id);
+
+            $('#visita_modal_dlg').modal({
+                onShow: () => {
+                    $('.ui.accordion').accordion(visit.internacion == 1 ? "open" : "", 1);
+                    $('.ui.checkbox').checkbox(visit.internacion == 1 ? "set checked" : "");
+
+                    //Por defecto muestro todo
+                    $("#detalles").show();
+                    $("#internacion").show();
+
+                    //Mostrar opcion de supervision
+                    if (permisos[0] == "1") {
+                        $("#supervision").show();
+                    } else {
+                        $("#supervision").hide();
+                    }
+
+                    //Mostrar opcion de coordinacion
+                    if (permisos[1] == "1") {
+                        $("#coordinacion").show();
+                    } else {
+                        $("#coordinacion").hide();
+                    }
+
+                    //Mostrar opcion de coordinacion + supervision
+                    if (permisos[0] == "1" &&
+                        permisos[1] == "1") {
+                        $("#coorsup").show();
+                    } else {
+                        $("#coorsup").hide();
+                    }
+
+                    //Mostrar opcion de docencia
+                    if (permisos[2] == "1") {
+                        $("#docencia1").show();
+                        $("#docencia2").show();
+                        $("#docencia3").show();
+                    } else {
+                        $("#docencia1").hide();
+                        $("#docencia2").hide();
+                        $("#docencia3").hide();
+                    }
+
+                    $("#supervision").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#coordinacion").checkbox("uncheck");
+                            $("#coorsup").checkbox("uncheck");
+                            $("#docencia1").checkbox("uncheck");
+                            $("#docencia2").checkbox("uncheck");
+                            $("#docencia3").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 2;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    $("#coordinacion").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#supervision").checkbox("uncheck");
+                            $("#coorsup").checkbox("uncheck");
+                            $("#docencia1").checkbox("uncheck");
+                            $("#docencia2").checkbox("uncheck");
+                            $("#docencia3").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 3;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    $("#coorsup").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#supervision").checkbox("uncheck");
+                            $("#coordinacion").checkbox("uncheck");
+                            $("#docencia1").checkbox("uncheck");
+                            $("#docencia2").checkbox("uncheck");
+                            $("#docencia3").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 4;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    $("#docencia1").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#supervision").checkbox("uncheck");
+                            $("#coordinacion").checkbox("uncheck");
+                            $("#coorsup").checkbox("uncheck");
+                            $("#docencia2").checkbox("uncheck");
+                            $("#docencia3").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 5;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    $("#docencia2").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#supervision").checkbox("uncheck");
+                            $("#coordinacion").checkbox("uncheck");
+                            $("#coorsup").checkbox("uncheck");
+                            $("#docencia1").checkbox("uncheck");
+                            $("#docencia3").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 6;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    $("#docencia3").checkbox({
+                        onChecked: function () {
+                            //dechequeamos los demas
+                            $("#supervision").checkbox("uncheck");
+                            $("#coordinacion").checkbox("uncheck");
+                            $("#coorsup").checkbox("uncheck");
+                            $("#docencia1").checkbox("uncheck");
+                            $("#docencia2").checkbox("uncheck");
+                            $("#guardar_btn").removeClass("disabled");
+                            $("#detalles").hide(500);
+                            $("#internacion").hide(500);
+                            type = 7;
+                        },
+                        onUnchecked: function () {
+                            $("#detalles").show(500);
+                            $("#internacion").show(500);
+                            $("#guardar_btn").addClass("disabled");
+                            type = 1;
+                        }
+                    });
+
+                    //Si es tipo visita comun
+                    if (visit.type == 1) {
+                        $("#visita_desde").val(visit.desde);
+                        $("#visita_hasta").val(visit.hasta);
+
+                        $("#cabecera_visita_dlg").html("Editar Visita");
+                        $("#guardar_btn").addClass("disabled");
+                        $("#message").hide();
+                        $("#aviso").hide();
+                        $("#responseMessage").html("");
+                        $("#valdiff").html("");
+                        obtieneDiferencia();
+                    } else {
+                        //Si es tipo tarea 
+                        $('.ui.accordion').accordion("open", 1);
+
+                        $("#supervision").checkbox("uncheck");
+                        $("#coordinacion").checkbox("uncheck");
+                        $("#coorsup").checkbox("uncheck");
+                        $("#docencia1").checkbox("uncheck");
+                        $("#docencia2").checkbox("uncheck");
+                        $("#docencia3").checkbox("uncheck");
+
+                        switch (visit.type) {
+                            case '2':
+                                $("#supervision").checkbox("check");
+                                break;
+                            case '3':
+                                $("#coordinacion").checkbox("check");
+                                break;
+                            case '4':
+                                $("#coorsup").checkbox("check");
+                                break;
+                            case '5':
+                                $("#docencia1").checkbox("check");
+                                break;
+                            case '6':
+                                $("#docencia2").checkbox("check");
+                                break;
+                            case '7':
+                                $("#docencia3").checkbox("check");
+                                break;
+
+                        }
+
+                    }
+                },
+                onApprove: function (element) {
+                    let user = JSON.parse(localStorage.getItem('user'));
+
+                    let formVisita = $('#visita_form');
+
+                    // get all values
+                    let allFields = formVisita.form('get values');
+
+                    //Solo chequeo si es una visita normal.
+                    if (type == 1) {
+                        if (!validaRangoHorario()) {
+                            return;
+                        }
+                    }
+                    else {
+                        //Si es una tarea especial solo ponemos el valor desde
+                        desde = moment(hoy).format("YYYY-MM-DD HH:mm");
+                        hasta = moment(hoy).format("YYYY-MM-DD HH:mm");
+                    }
+
+
+
+                    let raw = JSON.stringify({ "id": id, type: type, "desde": desde, "hasta": hasta, "intern": allFields["intern"] });
+
+                    let requestOptions = {
+                        method: 'POST',
+                        headers: getMyHeader(),
+                        body: raw,
+                        redirect: 'follow'
+                    };
+
+                    let url = `${apiUrl}/visitas.php`;
+
+                    $("#message").hide();
+                    $("#savingDimmer").addClass("active");
+                    fetch(url, requestOptions)
+                        .then(function (res) {
+                            //Si todo salio bien cerramos el dialogo y refrescamos la lista
+                            cargarVisitas();
+                            $('#visita_modal_dlg').modal("hide");
+                            return res.json(); //error here
+                        }).then(function (data) {
+                            $("#savingDimmer").removeClass("active");
+                            if (data.message != undefined) {
+                                $("#message").show();
+                                $("#responseMessage").html(data.message);
+                                return false;
+                            }
+                            return true;
+                        }).catch((error) => {
+                            console.log(error);
+                            return false;
+                        });
+                    return false;
+                }
+            }).modal('show');
+        }
+
+        function getVisita(id) {
+            for (const i in visitas) {
+                if (visitas.hasOwnProperty(i)) {
+                    const element = visitas[i];
+                    if (element.id == id) {
+                        return element;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function roundTimeQuarterHour(time) {
+            let timeToReturn = new Date(time);
+
+            timeToReturn.setMilliseconds(Math.round(timeToReturn.getMilliseconds() / 1000) * 1000);
+            timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60);
+            timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 15) * 15);
+            return timeToReturn;
+        }
+    </script>
+
+</body>
+
+</html>

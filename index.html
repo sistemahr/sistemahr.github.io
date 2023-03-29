@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
+  <title>Sistema Admistracion Visitas</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" href="images/icon-152.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="white" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Sistema Visitas">
+  <meta name="msapplication-TileImage" content="images/icon-144.png">
+  <meta name="msapplication-TileColor" content="#FFFFFF">
+
+  <script src="lib/jquery.min.js"></script>
+  <script src="lib/semantic.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="lib/semantic.min.css">
+
+  <style>
+    body {
+      background-color: #bbbbbb;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    .container {
+      text-align: center;
+      margin: 50vh auto;
+    }
+  </style>
+
+</head>
+
+<body class="fullscreen">
+  <div class="container">
+    <div class="ui active dimmer">
+      <h1 class="title">Sistema Admistracion Visitas</h1>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (localStorage.getItem("user") === null) {
+          window.location.href = "login.html";
+        } else {
+          let user = JSON.parse(localStorage.getItem("user"));
+          let expireTime = user.expireAt;
+          let currentDate = new Date();
+          let expireAt = new Date(expireTime * 1000);
+
+          if (expireAt < currentDate) {
+            window.location.href = "login.html";
+          } else {
+            window.location.href = "pacientes.html";
+          }
+        }
+    });
+  </script>
+</body>
+
+</html>
